@@ -9,9 +9,7 @@ sum_dev3or5(0,R) ->
     done;
 sum_dev3or5(X,R) ->
 if
-	X rem 3 == 0 ->
-		Y=X;
-	X rem 5 == 0 ->
+	X rem 3 == 0 ;	X rem 5 == 0 ->
 		Y=X;
 	true -> Y = 0
 end,
