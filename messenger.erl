@@ -13,6 +13,14 @@
 %%%     function is not logged on or if ToName is not logged on at
 %%%     any node.
 %%%
+%%% message_to_queue(ToQueue, Message)
+%%%     save Message in ToQueue. Error messages if the user of this 
+%%%     function is not logged on.
+%%%
+%%% message_from_queue(Queue)
+%%%     return Message from Queue on the FIFO basis. Error messages if Query is 
+%%%     empty.
+%%%
 %%% One node in the network of Erlang nodes runs a server which maintains
 %%% data about the logged on users. The server is registered as "messenger"
 %%% Each node where there is a user logged on runs a client process registered
