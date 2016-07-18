@@ -49,7 +49,7 @@
 %%% name of the node where the messenger server runs
 
 -module(messenger).
--export([start_server/0, server/1, logon/1, logoff/0, message/2, client/2]).
+-export([start_server/0, stop_server/0, server/2, logon/1, logoff/0, message/2, client/2,  message_to_queue/2, message_from_queue/1]).
 
 %%% Change the function below to return the name of the node where the
 %%% messenger server runs
@@ -57,24 +57,37 @@ server_node() ->
     messenger@RAVSHAN.
 
 %%% This is the server process for the "messenger"
-%%% the user list has the format [{ClientPid1, Name1},{ClientPid22, Name2},...]
-server(User_List) ->
+%%% the user list has the format [{ClientPid1, Name1},{ClientPid2, Name2},...]
+%%% the queue list has the format [{QueueCode1, Message1},{QueueCode2, Message2},...]
+server(User_List,Queue_List) ->
     receive
         {From, logon, Name} ->
             New_User_List = server_logon(From, Name, User_List),
-            server(New_User_List);
+            io:format("User saved: ~p~n", [New_User_List]),
+            server(New_User_List,Queue_List);
         {From, logoff} ->
             New_User_List = server_logoff(From, User_List),
-            server(New_User_List);
+            server(New_User_List,Queue_List);
         {From, message_to, To, Message} ->
             server_transfer(From, To, Message, User_List),
             io:format("list is now: ~p~n", [User_List]),
-            server(User_List)
+            server(User_List,Queue_List);
+        {From, message_to_queue, ToQueue, Message} ->
+ 			New_Queue_List = server_in_queue(From, ToQueue, Message, Queue_List), 
+            io:format("Message saved: ~p~n", [New_Queue_List]),
+            server(User_List,New_Queue_List);
+        {From, message_from_queue, Queue} ->
+ 			server_queue_transfer(From, Queue, Queue_List), 
+            io:format("Query after sent: ~p~n", [Queue_List]),
+            server(User_List,Queue_List)
     end.
 
 %%% Start the server
 start_server() ->
-    register(messenger, spawn(messenger, server, [[]])).
+    register(messenger, spawn(messenger, server, [[],[]])).
+
+stop_server() ->
+    null.
 
 
 %%% Server adds a new user to the user list
@@ -93,6 +106,28 @@ server_logon(From, Name, User_List) ->
 server_logoff(From, User_List) ->
     lists:keydelete(From, 1, User_List).
 
+%%% Server add message to query
+server_in_queue(From, To, Message, []) ->
+	New_Queue_List = queue:new(),
+	server_in_queue(From, To, Message, New_Queue_List);
+server_in_queue(From, To, Message, Queue_List) ->
+    %% Find the receiver and send the message
+    From ! {messenger, added},
+	queue:in({To,Message},Queue_List).
+
+
+%%% Server send message to requester
+server_queue_transfer(From, Queue, []) ->
+    From ! {messenger, query_is_empty};
+server_queue_transfer(From, Queue, Queue_List) ->
+    %% Find the receiver and send the message
+    case queue:out(Queue_List) of
+        {empty,{[],[]}} ->
+            From ! {messenger, asked_query_not_found};
+		{{value, Message}, Rem_Query_List} ->
+            From ! {messenger, Message},
+			server_queue_transfer(From, Queue, Rem_Query_List)
+    end.
 
 %%% Server transfers a message between user
 server_transfer(From, To, Message, User_List) ->
@@ -113,8 +148,9 @@ server_transfer(From, Name, To, Message, User_List) ->
             ToPid ! {message_from, Name, Message}, 
             From ! {messenger, sent} 
     end.
-
-
+	
+	
+	
 %%% User Commands
 logon(Name) ->
     case whereis(mess_client) of 
@@ -135,6 +171,23 @@ message(ToName, Message) ->
              ok
 end.
 
+%message to queue
+message_to_queue(ToQueue, Message) ->
+    case whereis(mess_client) of % Test if the client is running
+        undefined ->
+            not_logged_on;
+        _ -> mess_client ! {message_to_queue, ToQueue, Message},
+             ok
+end.
+
+%get message from queue
+message_from_queue(Queue) ->
+    case whereis(mess_client) of % Test if the client is running
+        undefined ->
+            not_logged_on;
+        _ -> mess_client ! {message_from_queue, Queue},
+             ok
+end.
 
 %%% The client process which runs on each server node
 client(Server_Node, Name) ->
@@ -149,6 +202,12 @@ client(Server_Node) ->
             exit(normal);
         {message_to, ToName, Message} ->
             {messenger, Server_Node} ! {self(), message_to, ToName, Message},
+            await_result();
+        {message_to_queue, ToQueue, Message} ->
+            {messenger, Server_Node} ! {self(), message_to_queue, ToQueue, Message},
+            await_result();
+        {message_from_queue, Queue} ->
+            {messenger, Server_Node} ! {self(), message_from_queue, Queue},
             await_result();
         {message_from, FromName, Message} ->
             io:format("Message from ~p: ~p~n", [FromName, Message])
