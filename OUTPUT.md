@@ -36,15 +36,11 @@ Finish:10 Jul 2016  4:20:21.993000
 
 
 q8:
-
 Server
--------------------------------------------------------
 (messenger@RAVSHAN)2> messenger:start_server().
 true
--------------------------------------------------------
 
 Client 1
--------------------------------------------------------
 (c1@RAVSHAN)1> messenger:logon(aziz).
 true
 logged_on      
@@ -58,8 +54,7 @@ added
 ok
 added
 
-Clien 2
--------------------------------------------------------
+Client 2
 (c2@RAVSHAN)1> messenger:logon(peter).
 true
 logged_on 
@@ -75,5 +70,5 @@ ok
 (c2@RAVSHAN)5> messenger:message_from_queue(a1).
 asked_query_not_found
 ok
--------------------------------------------------------
+
 
