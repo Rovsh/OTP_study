@@ -1,4 +1,4 @@
-﻿q1:start(1000).            
+q1:start(1000).            
 233168
 done
 
@@ -35,7 +35,7 @@ Max Chain quantity -> 524  started from 837799
 Finish:10 Jul 2016  4:20:21.993000
 
 
-q8:
+q8 (not gen server):
 Server
 (messenger@RAVSHAN)2> messenger:start_server().
 true
@@ -71,4 +71,32 @@ ok
 asked_query_not_found
 ok
 
-
+q8 (gen server):
+(messenger@RAVSHAN)1> c(vshlr_4).
+{ok,vshlr_4}
+(messenger@RAVSHAN)2> vshlr_4:start().
+{ok,<0.69.0>}
+(messenger@RAVSHAN)3> vshlr_4:to_query(a1,"aaaa1").
+Query is: {[{a1,"aaaa1"}],[]}
+ok
+(messenger@RAVSHAN)4> vshlr_4:to_query(a1,"aaaa2"). 
+Query is: {[{a1,"aaaa2"}],[{a1,"aaaa1"}]}
+ok
+(messenger@RAVSHAN)5> vshlr_4:to_query(a1,"aaaa3"). 
+Query is: {[{a1,"aaaa3"},{a1,"aaaa2"}],[{a1,"aaaa1"}]}
+ok
+(messenger@RAVSHAN)6> vshlr_4:get_query(a1).       
+Group: a1, Message: "aaaa1"
+Remain query is: {[{a1,"aaaa3"}],[{a1,"aaaa2"}]}
+ok
+(messenger@RAVSHAN)7> vshlr_4:get_query(a1).
+Group: a1, Message: "aaaa2"
+Remain query is: {[],[{a1,"aaaa3"}]}
+ok
+(messenger@RAVSHAN)8> vshlr_4:get_query(a1).
+Group: a1, Message: "aaaa3"
+Remain query is: {[],[]}
+ok
+(messenger@RAVSHAN)9> vshlr_4:stop().              
+ok
+(messenger@RAVSHAN)10> 
