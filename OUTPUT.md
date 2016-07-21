@@ -3,9 +3,20 @@ q1:start(1000).
 done
 
 q2:start(4000000). 
+Result -> 2 plus 8 = 10 
+Result -> 10 plus 34 = 44 
+Result -> 44 plus 144 = 188 
+Result -> 188 plus 610 = 798 
+Result -> 798 plus 2584 = 3382 
+Result -> 3382 plus 10946 = 14328 
+Result -> 14328 plus 46368 = 60696 
+Result -> 60696 plus 196418 = 257114 
+Result -> 257114 plus 832040 = 1089154 
+Result -> 1089154 plus 3524578 = 4613732 
 Next value 5702887 more than MaxValue 4000000 
-Result -> 4613730
+Result -> 4613732
 done
+
 
 q3:start(600851475143).
 Prime factor -> 71
@@ -20,8 +31,10 @@ Max_prime_factor -> 6857
 exit
 
 q4:start(3).                                          
-(836*836 = largest_palindrome -> "698896"
-exit
+(913*993) = largest_palindrome -> 906609
+max_palindrome = 906609
+ok
+
 
 q5:start(20).
 Start: 9 Jul 2016 14:01:27.120000
